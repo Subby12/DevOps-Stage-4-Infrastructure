@@ -1,0 +1,42 @@
+---
+- name: Create app directory
+  file:
+    path: /opt/todo-app
+    state: directory
+    mode: '0755'
+
+- name: Clone application repository
+  git:
+    repo: https://github.com/Subby12/DevOps-Stage-4.git
+    dest: /opt/todo-app
+    force: yes
+
+- name: Create Traefik certificates directory
+  file:
+    path: /opt/todo-app/traefik/certificates
+    state: directory
+    mode: '0755'
+
+- name: Create docker network
+  command: docker network create todo-network
+  ignore_errors: yes
+
+# Create dummy directory and jar for users-api
+- name: Create target directory in users-api
+  file:
+    path: /opt/todo-app/users-api/target
+    state: directory
+    mode: '0755'
+
+- name: Create dummy JAR file
+  shell: touch /opt/todo-app/users-api/target/app.jar
+  args:
+    chdir: /opt/todo-app/users-api
+
+# Deploy with standard docker-compose
+- name: Deploy application with Docker Compose
+  shell: cd /opt/todo-app && /usr/local/bin/docker-compose up -d
+  args:
+    chdir: /opt/todo-app
+  async: 1800
+  poll: 30
